@@ -5,23 +5,30 @@ const noteController = {
     res.status(201).json({ message: "test router working" });
   },
   create: async (req, res) => {
+  if (!req.body.title || !req.body.content) {
+    return res
+      .status(401)
+      .json({ message: "title and content are required" });
+  }
 
-    if (!req.body.title || !req.body.content) {
-      return res
-        .status(401)
-        .json({ message: "title and content are required" });
-    }
+  try {
+    const note = await noteModel.create({
+      ...req.body,
+      userId: req?.user?._id, // ✅ userId attach
+    });
 
-    try {
-      const notes = noteModel.create({...req.body,userId:req?.user?._id});
-      res.status(201).json({
-        message: "Note created successfully"
-      });
-    } catch (error) {
-      console.error("Error creating note:", error);
-      res.status(500).json({ message: error.message || "Internal server error" });
-    }
-  },
+    res.status(201).json({
+      message: "Note created successfully",
+      note, // ✅ return created note
+    });
+  } catch (error) {
+    console.error("Error creating note:", error);
+    res
+      .status(500)
+      .json({ message: error.message || "Internal server error" });
+  }
+},
+
 
   getById: async (req, res) => {
     const { noteId } = req.params;
